@@ -62,7 +62,8 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
       getCensusData('state:*', '', { AGEGROUP: '31' }),
     ])
     const values = mapData.map(d => parseFloat(d.POP))
-    const scale = scaleSequential(interpolateBlues)
+    const scale = this.state.scale
+      // Set domain of color scale
       .domain([min(values)!, max(values)!])
 
     this.setState({ map, mapData, scale })
