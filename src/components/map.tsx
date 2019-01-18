@@ -42,7 +42,7 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
             >
               {/* Tooltip on <path> */}
               {data && (
-                <title>{data.GEONAME}</title>
+                <title>{data.GEONAME}: {data.POP}</title>
               )}
             </path>
           )
