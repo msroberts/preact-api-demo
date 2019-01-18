@@ -42,6 +42,5 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
   async componentWillMount () {
     const map = await getStates()
     this.setState({ map })
-    console.log(map)
   }
 }
