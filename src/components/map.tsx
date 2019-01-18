@@ -18,6 +18,11 @@ export interface IMapComponentState {
   mapData: any[],
   // Color scale (set when loading data)
   scale: ScaleSequential<string>
+  // State and county codes
+  fipsState: string
+  fipsCounty: string
+  // Whether to allow selecting state
+  allowClick: boolean
 }
 
 export default class MapComponent extends Component<{}, IMapComponentState> {
@@ -25,6 +30,10 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
   state: IMapComponentState = {
     mapData: [],
     scale: scaleSequential(interpolateBlues),
+    // Default to not selected
+    fipsState: '',
+    fipsCounty: '',
+    allowClick: true,
   }
 
   render ({}, { map, mapData, scale }: IMapComponentState) {
@@ -56,16 +65,40 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
   }
 
   async componentWillMount () {
-    const [map, mapData] = await Promise.all([
-      getStates(),
-      // Median age by state
-      getCensusData('state:*', '', { AGEGROUP: '31' }),
-    ])
-    const values = mapData.map(d => parseFloat(d.POP))
-    const scale = this.state.scale
-      // Set domain of color scale
-      .domain([min(values)!, max(values)!])
+    await this.setMapData()
+  }
 
-    this.setState({ map, mapData, scale })
+  async setMapData () {
+    // Prevent selecting a different state
+    this.setState({ allowClick: false })
+    const { fipsState } = this.state
+    const mapRequest = fipsState ? getStates() : getStates()
+    const dataRequest = getCensusData(
+      `${fipsState ? 'county' : 'state'}:*`,
+      fipsState ? `state:${fipsState}` : '',
+      { AGEGROUP: '31' },
+    )
+
+    // Allow promises to be handled separately
+    // tslint:disable-next-line:no-floating-promises
+    mapRequest
+      .then(map => this.setState({ map }))
+
+    // tslint:disable-next-line:no-floating-promises
+    dataRequest
+      .then(mapData => {
+        const values = mapData.map(d => parseFloat(d.POP))
+        const scale = this.state.scale
+          // Set domain of color scale
+          .domain([min(values)!, max(values)!])
+
+        this.setState({ mapData, scale })
+      })
+
+    await Promise.all([mapRequest, dataRequest])
+      .catch(console.error)
+
+    // Allow selecting map once both datasets have loaded
+    this.setState({ allowClick: true })
   }
 }
