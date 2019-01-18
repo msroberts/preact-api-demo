@@ -6,7 +6,10 @@ export default class App extends Component<{}, {}> {
   render () {
     return (
       <main>
-        <MapComponent/>
+        <article>
+          <h1>Median Age, 2017</h1>
+          <MapComponent/>
+        </article>
       </main>
     )
   }
