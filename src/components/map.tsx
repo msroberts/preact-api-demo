@@ -1,6 +1,9 @@
 import { Component, h } from 'preact'
 import { getStates } from '../data/geo'
+import { min, max } from 'd3-array'
 import { geoPath } from 'd3-geo'
+import { scaleSequential, ScaleSequential } from 'd3-scale'
+import { interpolateBlues } from 'd3-scale-chromatic'
 import { FeatureCollection } from 'geojson'
 import { Spinner } from './spinner'
 import { getCensusData } from '../data/census'
@@ -13,15 +16,18 @@ export interface IMapComponentState {
   map?: FeatureCollection
   // Data from Census
   mapData: any[],
+  // Color scale (set when loading data)
+  scale: ScaleSequential<string>
 }
 
 export default class MapComponent extends Component<{}, IMapComponentState> {
   // Set defaults for State
   state: IMapComponentState = {
     mapData: [],
+    scale: scaleSequential(interpolateBlues),
   }
 
-  render ({}, { map, mapData }: IMapComponentState) {
+  render ({}, { map, mapData, scale }: IMapComponentState) {
     return map ? (
       <svg
         // Allow resizeable SVG
@@ -32,6 +38,7 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
           return (
             <path
               d={pathData(d)!}
+              fill={data && scale(parseFloat(data.POP))}
             >
               {/* Tooltip on <path> */}
               {data && (
@@ -54,6 +61,10 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
       // Median age by state
       getCensusData('state:*', '', { AGEGROUP: '31' }),
     ])
-    this.setState({ map, mapData })
+    const values = mapData.map(d => parseFloat(d.POP))
+    const scale = scaleSequential(interpolateBlues)
+      .domain([min(values)!, max(values)!])
+
+    this.setState({ map, mapData, scale })
   }
 }
