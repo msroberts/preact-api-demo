@@ -1,5 +1,5 @@
 import { Component, h } from 'preact'
-import { getStates } from '../data/geo'
+import { getStates, getCounties } from '../data/geo'
 import { min, max } from 'd3-array'
 import { geoPath } from 'd3-geo'
 import { scaleSequential, ScaleSequential } from 'd3-scale'
@@ -36,11 +36,22 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     allowClick: true,
   }
 
+  mapClick = async (e: any) => {
+    let id = e.target.dataset.id as string
+    const { fipsState, fipsCounty } = this.state
+    if (id === fipsState + fipsCounty) {
+      id = ''
+    }
+    await this.setMapData(id.substr(0, 2), id.substr(2, 3))
+  }
+
   render ({}, { map, mapData, scale }: IMapComponentState) {
     return map ? (
       <svg
         // Allow resizeable SVG
         viewBox='0 0 960 600'
+        // Default color
+        fill='#ccc'
       >
         {map.features.map(d => {
           const data: any = mapData.find(x => x.state === d.id) || {}
@@ -48,6 +59,8 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
             <path
               d={pathData(d)!}
               fill={data && scale(parseFloat(data.POP))}
+              data-id={d.id}
+              onClick={this.mapClick}
             >
               {/* Tooltip on <path> */}
               {data && (
@@ -65,14 +78,13 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
   }
 
   async componentWillMount () {
-    await this.setMapData()
+    await this.setMapData('', '')
   }
 
-  async setMapData () {
+  async setMapData (fipsState: string, fipsCounty: string) {
     // Prevent selecting a different state
-    this.setState({ allowClick: false })
-    const { fipsState } = this.state
-    const mapRequest = fipsState ? getStates() : getStates()
+    this.setState({ allowClick: false, fipsState, fipsCounty })
+    const mapRequest = fipsState ? getCounties(fipsState) : getStates()
     const dataRequest = getCensusData(
       `${fipsState ? 'county' : 'state'}:*`,
       fipsState ? `state:${fipsState}` : '',
