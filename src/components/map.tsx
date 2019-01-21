@@ -14,6 +14,10 @@ const HEIGHT = 600
 // Function used to generate SVG path data
 const pathData = geoPath()
 
+export interface IMapComponentProps {
+  onMapClick: (id: string) => void
+}
+
 export interface IMapComponentState {
   // Map features data
   map?: FeatureCollection
@@ -30,7 +34,7 @@ export interface IMapComponentState {
   transform: string
 }
 
-export default class MapComponent extends Component<{}, IMapComponentState> {
+export default class MapComponent extends Component<IMapComponentProps, IMapComponentState> {
   // Set defaults for State
   state: IMapComponentState = {
     mapData: [],
@@ -48,10 +52,12 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     if (id === fipsState + fipsCounty) {
       id = ''
     }
+    // Alert app that FIPS ID has changed
+    this.props.onMapClick(id)
     await this.setMapData(id.substr(0, 2), id.substr(2, 3))
   }
 
-  render ({}, { map, mapData, scale, transform, fipsState, fipsCounty }: IMapComponentState) {
+  render ({}: IMapComponentProps, { map, mapData, scale, transform, fipsState, fipsCounty }: IMapComponentState) {
     return map ? (
       <svg
         // Allow resizeable SVG
