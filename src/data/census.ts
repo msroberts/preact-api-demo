@@ -2,12 +2,22 @@ import { getJson } from './json'
 
 const CENSUS_API = 'https://api.census.gov/data/2017/pep/charagegroups'
 
+export interface ICensusDataRow {
+  id: string
+  [key: string]: string
+}
+
 export function formatCensusData (data: string[][]) {
   const [headers] = data
   data = data.slice(1)
   return data.map(row => {
-    const obj: any = {}
+    const obj: ICensusDataRow = { id: '' }
     headers.forEach((field, i) => obj[field] = row[i])
+    // Set ID to FIPS codes
+    obj.id = obj.state
+    if (obj.county) {
+      obj.id += obj.county
+    }
     return obj
   })
 }

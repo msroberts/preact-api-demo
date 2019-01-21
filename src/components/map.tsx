@@ -6,7 +6,7 @@ import { scaleSequential, ScaleSequential } from 'd3-scale'
 import { interpolateBlues } from 'd3-scale-chromatic'
 import { FeatureCollection } from 'geojson'
 import { Spinner } from './spinner'
-import { getCensusData } from '../data/census'
+import { getCensusData, ICensusDataRow } from '../data/census'
 
 const WIDTH = 960
 const HEIGHT = 600
@@ -18,7 +18,7 @@ export interface IMapComponentState {
   // Map features data
   map?: FeatureCollection
   // Data from Census
-  mapData: any[],
+  mapData: ICensusDataRow[],
   // Color scale (set when loading data)
   scale: ScaleSequential<string>
   // State and county codes
@@ -63,23 +63,23 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
           transform={transform}
         >
           {map.features.map(d => {
-            const data: any = mapData.find(x => x.state === d.id) || {}
+            const data: ICensusDataRow = mapData.find(x => x.id === d.id) || { id: '' }
             return (
               <path
                 d={pathData(d)!}
-                fill={data && scale(parseFloat(data.POP))}
+                fill={data.id && scale(parseFloat(data.POP))}
                 data-id={d.id}
                 onClick={this.mapClick}
               >
                 {/* Tooltip on <path> */}
-                {data && (
+                {data.id && (
                   <title>{data.GEONAME}: {data.POP}</title>
                 )}
               </path>
             )
           })}
-          </g>
-        </svg>
+        </g>
+      </svg>
     ) : (
       <Spinner
         text='Loading map…'
