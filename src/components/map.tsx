@@ -51,7 +51,7 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     await this.setMapData(id.substr(0, 2), id.substr(2, 3))
   }
 
-  render ({}, { map, mapData, scale, transform }: IMapComponentState) {
+  render ({}, { map, mapData, scale, transform, fipsState, fipsCounty }: IMapComponentState) {
     return map ? (
       <svg
         // Allow resizeable SVG
@@ -64,12 +64,17 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
         >
           {map.features.map(d => {
             const data: ICensusDataRow = mapData.find(x => x.id === d.id) || { id: '' }
+            let className = 'clickable'
+            if (data.id && data.id === `${fipsState}${fipsCounty}`) {
+              className += ' selected'
+            }
             return (
               <path
                 d={pathData(d)!}
                 fill={data.id && scale(parseFloat(data.POP))}
                 data-id={d.id}
                 onClick={this.mapClick}
+                class={className}
               >
                 {/* Tooltip on <path> */}
                 {data.id && (
