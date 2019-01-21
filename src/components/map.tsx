@@ -8,6 +8,9 @@ import { FeatureCollection } from 'geojson'
 import { Spinner } from './spinner'
 import { getCensusData } from '../data/census'
 
+const WIDTH = 960
+const HEIGHT = 600
+
 // Function used to generate SVG path data
 const pathData = geoPath()
 
@@ -23,6 +26,8 @@ export interface IMapComponentState {
   fipsCounty: string
   // Whether to allow selecting state
   allowClick: boolean
+  // Zoom
+  transform: string
 }
 
 export default class MapComponent extends Component<{}, IMapComponentState> {
@@ -34,6 +39,7 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     fipsState: '',
     fipsCounty: '',
     allowClick: true,
+    transform: '',
   }
 
   mapClick = async (e: any) => {
@@ -45,30 +51,34 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     await this.setMapData(id.substr(0, 2), id.substr(2, 3))
   }
 
-  render ({}, { map, mapData, scale }: IMapComponentState) {
+  render ({}, { map, mapData, scale, transform }: IMapComponentState) {
     return map ? (
       <svg
         // Allow resizeable SVG
-        viewBox='0 0 960 600'
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         // Default color
         fill='#ccc'
       >
-        {map.features.map(d => {
-          const data: any = mapData.find(x => x.state === d.id) || {}
-          return (
-            <path
-              d={pathData(d)!}
-              fill={data && scale(parseFloat(data.POP))}
-              data-id={d.id}
-              onClick={this.mapClick}
-            >
-              {/* Tooltip on <path> */}
-              {data && (
-                <title>{data.GEONAME}: {data.POP}</title>
-              )}
-            </path>
-          )
-        })}
+        <g
+          transform={transform}
+        >
+          {map.features.map(d => {
+            const data: any = mapData.find(x => x.state === d.id) || {}
+            return (
+              <path
+                d={pathData(d)!}
+                fill={data && scale(parseFloat(data.POP))}
+                data-id={d.id}
+                onClick={this.mapClick}
+              >
+                {/* Tooltip on <path> */}
+                {data && (
+                  <title>{data.GEONAME}: {data.POP}</title>
+                )}
+              </path>
+            )
+          })}
+          </g>
         </svg>
     ) : (
       <Spinner
@@ -94,7 +104,23 @@ export default class MapComponent extends Component<{}, IMapComponentState> {
     // Allow promises to be handled separately
     // tslint:disable-next-line:no-floating-promises
     mapRequest
-      .then(map => this.setState({ map }))
+      .then(map => {
+        let transform = ''
+        if (fipsState) {
+          // Zoom to state: https://bl.ocks.org/mbostock/4699541
+          const bounds = pathData.bounds(map)
+          const dx = bounds[1][0] - bounds[0][0]
+          const dy = bounds[1][1] - bounds[0][1]
+          const x = (bounds[0][0] + bounds[1][0]) / 2
+          const y = (bounds[0][1] + bounds[1][1]) / 2
+          const scale = .9 / Math.max(dx / WIDTH, dy / HEIGHT)
+          const translate = [WIDTH / 2 - scale * x, HEIGHT / 2 - scale * y]
+
+          transform = `translate(${translate})scale(${scale})`
+        }
+
+        this.setState({ map, transform })
+      })
 
     // tslint:disable-next-line:no-floating-promises
     dataRequest
