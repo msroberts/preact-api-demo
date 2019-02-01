@@ -5,7 +5,7 @@ import MapComponent from './map'
 import { Pie } from './charts/pie'
 import { IChartData, IChartItem } from './charts/chart-data'
 import { Spinner } from './spinner'
-import { getCensusData, AGEGROUPS } from '../data/census'
+import { getCensusData, AGEGROUPS, getCensusDataForFips } from '../data/census'
 
 export interface IAppState {
   fipsId: string
@@ -34,10 +34,13 @@ export default class App extends Component<{}, IAppState> {
 
   mapClick = (fipsId: string) => {
     this.setState({ fipsId })
+
+    // tslint:disable-next-line:no-floating-promises
+    this.updateChartData()
   }
 
   updateChartData = async () => {
-    const data = (await getCensusData('us:*', '', { DATE: '10' }, ['AGEGROUP', 'DATE_DESC']))
+    const data = (await getCensusDataForFips(this.state.fipsId, { DATE: '10' }, ['AGEGROUP', 'DATE_DESC']))
       .filter(d => selectedAgeGroups.indexOf(d.AGEGROUP) >= 0)
 
     const pieData: IChartData = {

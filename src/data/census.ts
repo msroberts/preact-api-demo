@@ -81,3 +81,26 @@ export async function getCensusData (
   const data = await getJson(url)
   return formatCensusData(data)
 }
+
+export function getCensusDataForFips (
+  fipsId: string,
+  additionalFilters?: {[key: string]: string},
+  fields?: string[],
+) {
+  const fipsState = fipsId.substr(0, 2)
+  const fipsCounty = fipsId.substr(2, 3)
+
+  let filterFor = ''
+  let filterIn = ''
+
+  if (fipsCounty) {
+    filterFor = `county:${fipsCounty}`
+    filterIn = `state:${fipsState}`
+  } else if (fipsState) {
+    filterFor = `state:${fipsState}`
+  } else {
+    filterFor = 'us:01'
+  }
+
+  return getCensusData(filterFor, filterIn, additionalFilters, fields)
+}
