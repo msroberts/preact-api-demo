@@ -13,10 +13,22 @@ export interface IAppState {
 }
 
 function formatter (d: IChartItem) {
-  return `${d.label} (${(d.value / 1000000).toLocaleString([], {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  })}M)`
+  let label = ''
+  let dividedBy = 1
+  if (d.value > 1e6) {
+    label = 'M'
+    dividedBy = 1e6
+  } else if (d.value > 1e3) {
+    label = 'K'
+    dividedBy = 1e3
+  }
+
+  const digits = dividedBy > 1 ? 2 : 0
+
+  return `${d.label} (${(d.value / dividedBy).toLocaleString([], {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  })}${label})`
 }
 
 const selectedAgeGroups = [
