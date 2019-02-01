@@ -5,7 +5,7 @@ import MapComponent from './map'
 import { Pie } from './charts/pie'
 import { IChartData, IChartItem } from './charts/chart-data'
 import { Spinner } from './spinner'
-import { getCensusData, AGEGROUPS, getCensusDataForFips } from '../data/census'
+import { AGEGROUPS, getCensusDataForFips } from '../data/census'
 
 export interface IAppState {
   fipsId: string
