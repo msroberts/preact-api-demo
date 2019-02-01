@@ -51,7 +51,7 @@ export default class App extends Component<{}, IAppState> {
     this.updateChartData()
   }
 
-  updateChartData = async () => {
+  async updateChartData () {
     const data = (await getCensusDataForFips(this.state.fipsId, { DATE: '10' }, ['AGEGROUP', 'DATE_DESC']))
       .filter(d => selectedAgeGroups.indexOf(d.AGEGROUP) >= 0)
 
